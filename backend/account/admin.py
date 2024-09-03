@@ -29,7 +29,7 @@ class CustomUserAdmin(ImportExportModelAdmin, DjangoUserAdmin):
         ),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
-    list_display = ("username", "name")
+    list_display = ("username", "name","role","grade","major_class")
     actions = ['delete_selected']  # Ensure bulk delete is enabled
 
 class GroupProxy(Group):

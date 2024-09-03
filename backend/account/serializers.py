@@ -11,6 +11,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # 添加自定义字段到载荷
         token['username'] = user.username
         token['name']=user.name
+        token['grade']=user.grade
+        token['major_class']=user.major_class
         return token
 
 class UserSerializer(serializers.ModelSerializer):
