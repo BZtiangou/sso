@@ -85,6 +85,20 @@ body {
   font-size: 3rem;
 }
 
+.verified {
+  display: flex;
+  justify-content: space-around;
+  display: none;
+}
+
+#picture {
+  color: whitesmoke;
+  text-align: center;
+  line-height: 60px;
+  letter-spacing: 2px;
+  font-size: 1.2rem;
+}
+
 .container .drop .content .form {
   display: flex;
   flex-direction: column;

@@ -21,6 +21,13 @@
           <div class="inputBox">
             <input id="password" type="password" placeholder="密码">
           </div>
+          <div class="verified">
+            <div class="inputBox" style="width: 150px;">
+              <input id="verify" type="text" placeholder="验证码">
+            </div>
+            <div id="picture" style="width: 150px; background-color: black; color: whitesmoke;">
+            </div>
+          </div>
           <div class="inputBox">
             <input type="submit" id="sumbitButton" value="登录">
           </div>
@@ -31,10 +38,14 @@
     <a href="./password/getToken.html" class="btns" style="font-size: 1.5rem; font-weight: bold;">找回密码</a>
   </div>
   <script>
+    let wrongTime = 0;
+    document.querySelector('#picture').innerHTML = Math.random().toString(36).substring(2, 6);
     document.querySelector('#sumbitButton').addEventListener('click', () => {
       // 获取输入框的值
       const username = document.querySelector('#username').value;
       const password = document.querySelector('#password').value;
+      const verify = document.querySelector('#verify').value;
+      console.log(wrongTime)
       if (!username || !password) {
         alert('请输入用户名和密码');
         return;
@@ -51,27 +62,54 @@
         })
       }).then(response => {
         // 只有响应状态码为200才可以进入
-        console.log(response);
-        if (response.status == 200) {
-          location.href = './Authoritarian.html';
-        } else if (!response.ok && response.status == '500') {
-          alert('网络似乎出了问题，请稍后重试')
-          return;
-        } else if (response.status == '400' || response.status == '401') {
-          alert('用户名或密码错误');
-          return
-        } else if (response.status == '520') {
-          alert('还未设置邮箱，请先提交邮箱信息！');
-          location.href = './email.html';
-          return
+        if (wrongTime < 3) {
+          if (!username || !password) {
+            alert('请输入用户名和密码');
+            return;
+          }
+          if (response.status == 200) {
+            location.href = './Authoritarian.html';
+          } else if (response.status == '400' || response.status == '401') {
+            alert('用户名或密码错误');
+            wrongTime += 1
+          } else if (response.status == '520') {
+            alert('还未设置邮箱，请先提交邮箱信息！');
+            location.href = './email.html';
+          } else {
+            alert('未知错误，请稍后重试');
+          }
         } else {
-          alert('未知错误，请稍后重试');
-          return
+          document.querySelector('.verified').style.display = 'flex';
+          if (!username || !password || !verify) {
+            alert('请输入用户名和密码或者验证码！');
+            return;
+          }
+          if (response.status == 200) {
+            if (document.querySelector('#verify').value == document.querySelector('#picture').innerText) {
+              location.href = './Authoritarian.html';
+            } else {
+              console.log(document.querySelector('#verify').value)
+              console.log(document.querySelector('#picture').innerText)
+              console.log(document.querySelector('#verify').value == document.querySelector('#picture').innerText)
+              alert('验证码错误');
+              wrongTime += 1
+              document.querySelector('#picture').innerHTML = Math.random().toString(36).substring(2, 6);
+              return;
+            }
+          } else if (response.status == '400' || response.status == '401') {
+            alert('用户名或密码错误');
+            wrongTime += 1
+            return;
+          } else if (response.status == '520') {
+            alert('还未设置邮箱，请先提交邮箱信息！');
+            location.href = './email.html';
+            return;
+          } else {
+            alert('未知错误，请稍后重试');
+            return;
+          }
         }
-      }).catch(err => {
-        alert("用户名或密码错误");
-        console.error(err);
-      });
+      })
     })
   </script>
 
