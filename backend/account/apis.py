@@ -48,15 +48,13 @@ class getUserInfoApi(APIView):
             user = get_user_model().objects.get(name=serializer.validated_data["name"])
         except ObjectDoesNotExist:
             return Response({"message": "User not registered"}, status=status.HTTP_400_BAD_REQUEST)
-        key_bytes = b'\x10R\\\x08\xaa3E\xef\x1b\x85z,R\xa2\xe25'
-        cipher = AES.new(key_bytes, AES.MODE_ECB)
+        cipher = AES.new(eval(key), AES.MODE_ECB)
         plaintext = b'6666666666666666'
         enc = cipher.encrypt(plaintext)
-        # print(base64.b64encode(enc).decode('utf-8'))  # 打印加密后的结果
         # 将加密后的数据编码为base64
         enc_base64 = base64.b64encode(enc).decode('utf-8')
         # 解密
-        decipher = AES.new(key_bytes, AES.MODE_ECB)
+        decipher = AES.new(eval(key), AES.MODE_ECB)
         dec = decipher.decrypt(enc)
         if enc_base64 == serializer.validated_data["otp"]:
             return Response(user.username)
