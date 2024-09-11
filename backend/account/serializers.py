@@ -130,16 +130,12 @@ class modifyNameSerializer(serializers.Serializer):
         required=True
     )
 
-class userInfoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = [
-            "username",
-            "email",
-            "phone_number",
-            "name",
-            "gender",
-        ]
+class userInfoSerializer(serializers.Serializer):
+    name = serializers.CharField(
+        max_length=20,
+        required=True
+    )
+    otp = serializers.CharField()
 # class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 #     @classmethod
 #     def get_token(cls, user):

@@ -17,18 +17,51 @@ from base import email_inf
 from django.utils.timezone import now
 from datetime import timedelta
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django_otp.decorators import otp_required
+from Crypto.Cipher import AES
+import base64
+import dotenv  
+import os 
+from pathlib import Path
+import ast  # 用来将字符串解析为字节串
+import codecs  # 用于处理转义字符的字符串
+# 加密
+BASE_DIR = Path(__file__).resolve().parent.parent
+dotenv.load_dotenv(dotenv_path=BASE_DIR / ".env", verbose=True)
+key =  os.environ.get(
+    'PYOTP_SECRET_KEY',
+    '8\xae\xdbp|h\x80\n\xfd\x9f\xa1\xfb\xf6W$\xd6'
+)
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
 class getUserInfoApi(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        username = request.user.username
-        user = get_object_or_404(CustomUser, username=username)
-        seri=userInfoSerializer(user)
-        return Response(seri.data)
+    # permission_classes = [IsAuthenticated]
+    permission_classes = []
+    # @otp_required  # 添加此装饰器以要求TOTP验证
+    def post(self, request):
+        serializer = userInfoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            user = get_user_model().objects.get(name=serializer.validated_data["name"])
+        except ObjectDoesNotExist:
+            return Response({"message": "User not registered"}, status=status.HTTP_400_BAD_REQUEST)
+        key_bytes = b'\x10R\\\x08\xaa3E\xef\x1b\x85z,R\xa2\xe25'
+        cipher = AES.new(key_bytes, AES.MODE_ECB)
+        plaintext = b'6666666666666666'
+        enc = cipher.encrypt(plaintext)
+        # print(base64.b64encode(enc).decode('utf-8'))  # 打印加密后的结果
+        # 将加密后的数据编码为base64
+        enc_base64 = base64.b64encode(enc).decode('utf-8')
+        # 解密
+        decipher = AES.new(key_bytes, AES.MODE_ECB)
+        dec = decipher.decrypt(enc)
+        if enc_base64 == serializer.validated_data["otp"]:
+            return Response(user.username)
+        else:
+            return Response({"message": "OTP verification failed"}, status=status.HTTP_401_UNAUTHORIZED)
         
     
 #注册api
