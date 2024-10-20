@@ -1,12 +1,12 @@
 from .models import CustomUser
 from .serializers import modifyPhoneSerializer,modifyEmailSerializer,modifyPasswordSerializer,UserLoginSerializer,UserSerializer,IsPasswordSerializer,ResetSerializer,modifyNameSerializer
-from .serializers import modifyGenderSerializer,userInfoSerializer,CheckPhoneSerializer,CustomTokenObtainPairSerializer
+from .serializers import modifyGenderSerializer,userInfoSerializer,CheckPhoneSerializer,CustomTokenObtainPairSerializer,getAllUserInfoSerializer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAdminUser 
 from rest_framework import status
-from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -17,14 +17,12 @@ from base import email_inf
 from django.utils.timezone import now
 from datetime import timedelta
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django_otp.decorators import otp_required
 from Crypto.Cipher import AES
 import base64
 import dotenv  
 import os 
 from pathlib import Path
-import ast  # 用来将字符串解析为字节串
-import codecs  # 用于处理转义字符的字符串
+
 # 加密
 BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv.load_dotenv(dotenv_path=BASE_DIR / ".env", verbose=True)
@@ -61,6 +59,24 @@ class getUserInfoApi(APIView):
         else:
             return Response({"message": "OTP verification failed"}, status=status.HTTP_401_UNAUTHORIZED)
         
+class GetAllUserInfoApi(APIView):
+    permission_classes = [IsAdminUser]  # 只允许管理员访问
+
+    def get(self, request):
+        # 获取所有用户
+        users = get_user_model().objects.all()
+        serialized_users = []
+        for user in users:
+            user_data = {
+                'name': user.name,
+                'email': user.email,
+                'phone_number': user.phone_number,
+                'grade': user.grade,
+                'major_class': user.major_class,
+                'role': user.role,
+            }
+            serialized_users.append(user_data)
+        return Response(serialized_users)
     
 #注册api
 class UserRegisterApi(APIView):

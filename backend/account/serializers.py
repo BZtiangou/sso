@@ -142,6 +142,17 @@ class userInfoSerializer(serializers.Serializer):
 #         token = super().get_token(user)
 #         token['username'] = user.name
 #         return token
+class getAllUserInfoSerializer(serializers.Serializer):
+    class Meta:
+        model = CustomUser
+        fields = [
+            'name',
+            'email',
+            'phone_number',
+            'grade',
+            'major_class',
+            'role',
+        ]
 
 class CheckPhoneSerializer(serializers.Serializer):
     class Meta:
