@@ -68,7 +68,9 @@ class GetAllUserInfoApi(APIView):
         serialized_users = []
         for user in users:
             user_data = {
+                'id':user.id,
                 'name': user.name,
+                'username':user.username,
                 'email': user.email,
                 'phone_number': user.phone_number,
                 'grade': user.grade,
