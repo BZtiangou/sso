@@ -54,6 +54,7 @@ THIRD_PARTY_APPS = [
     'import_export',
     'django_otp',
     'django_otp.plugins.otp_totp',
+    'drf_yasg',
 ]
 
 INSTALLED_APPS = [
