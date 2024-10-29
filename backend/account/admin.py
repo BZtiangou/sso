@@ -29,7 +29,8 @@ class CustomUserAdmin(ImportExportModelAdmin, DjangoUserAdmin):
         ),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
     )
-    list_display = ("username", "name","role","grade","major_class")
+    list_display = ("username", "name","role","grade","major_class","phone_number","email")
+    list_editable = ("role","grade","major_class","phone_number","email",)
     search_fields = ("name",)  # 新增姓名筛查字段
     actions = ['delete_selected']  # Ensure bulk delete is enabled
 
