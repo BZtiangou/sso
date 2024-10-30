@@ -21,8 +21,9 @@ from Crypto.Cipher import AES
 import base64
 import dotenv  
 import os 
+from math import ceil
 from pathlib import Path
-
+from django.core.paginator import Paginator, EmptyPage, InvalidPage
 # 加密
 BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv.load_dotenv(dotenv_path=BASE_DIR / ".env", verbose=True)
@@ -34,6 +35,14 @@ key =  os.environ.get(
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+class askUserlengthApi(APIView):
+    permission_classes = [IsAdminUser]  
+    def get(self, request):
+    # 获取所有用户的数量
+        total_users = CustomUser.objects.count()
+        # 计算记录/500，向上取整
+        total_pages = ceil(total_users / 500)
+        return Response({'total_pages': total_pages})
 
 class getUserInfoApi(APIView):
     # permission_classes = [IsAuthenticated]
@@ -63,14 +72,29 @@ class GetAllUserInfoApi(APIView):
     permission_classes = [IsAdminUser]  # 只允许管理员访问
 
     def get(self, request):
+        # 获取页码参数，默认为1
+        page = int(request.GET.get('page', 1))
+        # 每页显示的用户数量
+        per_page = 500
         # 获取所有用户
         users = get_user_model().objects.all()
+        # 创建分页器
+        paginator = Paginator(users, per_page)
+        
+        try:
+            # 获取指定页的用户列表
+            users_page = paginator.page(page)
+        except (EmptyPage, InvalidPage):
+            # 如果页码超出范围，返回错误
+            return Response({'error': 'Page out of range'},status=status.HTTP_400_BAD_REQUEST)
+
+        # 序列化用户数据
         serialized_users = []
-        for user in users:
+        for user in users_page:
             user_data = {
-                'id':user.id,
+                'id': user.id,
                 'name': user.name,
-                'username':user.username,
+                'username': user.username,
                 'email': user.email,
                 'phone_number': user.phone_number,
                 'grade': user.grade,
@@ -78,8 +102,8 @@ class GetAllUserInfoApi(APIView):
                 'role': user.role,
             }
             serialized_users.append(user_data)
+        
         return Response(serialized_users)
-    
 #注册api
 class UserRegisterApi(APIView):
     permission_classes = []
