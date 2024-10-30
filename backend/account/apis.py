@@ -20,10 +20,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from Crypto.Cipher import AES
 import base64
 import dotenv  
+from drf_yasg import openapi
 import os 
 from math import ceil
 from pathlib import Path
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
+from drf_yasg.utils import swagger_auto_schema
+
 # 加密
 BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv.load_dotenv(dotenv_path=BASE_DIR / ".env", verbose=True)
@@ -36,10 +39,20 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 class askUserlengthApi(APIView):
-    permission_classes = [IsAdminUser]  
+    permission_classes = [IsAdminUser]  # 只允许管理员访问
+    @swagger_auto_schema(
+        operation_summary='获取用户总数对应的总页数',
+        responses={
+            200: openapi.Response('成功的响应', openapi.Schema(type=openapi.TYPE_OBJECT,
+                                                              properties={
+                                                                  'total_pages': openapi.Schema(type=openapi.TYPE_INTEGER)
+                                                              })
+                                )
+        }
+    )
     def get(self, request):
-    # 获取所有用户的数量
-        total_users = CustomUser.objects.count()
+        # 获取所有用户的数量
+        total_users = get_user_model().objects.count()
         # 计算记录/500，向上取整
         total_pages = ceil(total_users / 500)
         return Response({'total_pages': total_pages})
@@ -70,14 +83,28 @@ class getUserInfoApi(APIView):
         
 class GetAllUserInfoApi(APIView):
     permission_classes = [IsAdminUser]  # 只允许管理员访问
-
+    @swagger_auto_schema(
+        operation_summary='获取所有用户信息',
+        manual_parameters=[
+            openapi.Parameter(
+                name='page', 
+                in_=openapi.IN_QUERY, 
+                description='页码参数，默认为1', 
+                type=openapi.TYPE_INTEGER
+            )
+        ],
+        responses={
+            200: '所有用户的信息',
+            400: '页码超出范围'
+        }
+    )
     def get(self, request):
         # 获取页码参数，默认为1
         page = int(request.GET.get('page', 1))
         # 每页显示的用户数量
         per_page = 500
         # 获取所有用户
-        users = get_user_model().objects.all()
+        users = CustomUser.objects.all()  
         # 创建分页器
         paginator = Paginator(users, per_page)
         
@@ -86,7 +113,7 @@ class GetAllUserInfoApi(APIView):
             users_page = paginator.page(page)
         except (EmptyPage, InvalidPage):
             # 如果页码超出范围，返回错误
-            return Response({'error': 'Page out of range'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Page out of range'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 序列化用户数据
         serialized_users = []
@@ -106,19 +133,52 @@ class GetAllUserInfoApi(APIView):
         return Response(serialized_users)
 #注册api
 class UserRegisterApi(APIView):
-    permission_classes = []
-    def post(self, request: Request) -> Response:
+    permission_classes = []  # 允许任何人注册
+
+    @swagger_auto_schema(
+        operation_summary='用户注册',
+        operation_description='提供用户信息进行注册',
+        responses={
+            201: openapi.Response('注册成功', openapi.Schema(type=openapi.TYPE_OBJECT,
+                                                           properties={
+                                                               'message': openapi.Schema(type=openapi.TYPE_STRING)
+                                                           })),
+            400: openapi.Response('注册失败', openapi.Schema(type=openapi.TYPE_OBJECT,
+                                                            properties={
+                                                                'errors': openapi.Schema(type=openapi.TYPE_OBJECT)
+                                                            }))
+        },
+        tags=['用户']
+    )
+    def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "User registration succeeded"}, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
         # 存入cookie版本
+        
 class UserLoginApi(APIView):
     permission_classes = []
-
+    @swagger_auto_schema(
+        operation_summary='用户登录',
+        operation_description='提供用户名和密码进行登录',
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, description='用户名', example='user123'),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, description='密码', format='password', example='yourpassword')
+            },
+            required=['username', 'password']
+        ),
+        responses={
+            status.HTTP_200_OK: openapi.Response('登录成功'),
+            status.HTTP_400_BAD_REQUEST: openapi.Response('无效的请求或认证失败'),
+            status.HTTP_401_UNAUTHORIZED: openapi.Response('用户名或密码错误')
+        },
+        tags=['用户']
+    )
     def post(self, request: Request) -> Response:
         serializer = UserLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
