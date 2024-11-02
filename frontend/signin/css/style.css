@@ -227,3 +227,11 @@ body {
 .btns:hover {
   border-radius: 50%;
 }
+
+/* 保留原有代码 */
+@media (max-width: 768px) {
+  .container {
+    transform: scale(0.75);
+    transform-origin: top center;
+  }
+}
