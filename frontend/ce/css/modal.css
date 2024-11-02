@@ -42,12 +42,24 @@ a:hover {
     overflow: hidden;
     position: absolute;
     top: 50%;
-    width: 100%;
+    width: 90vw;
     z-index: 1000;
 }
 
-.modal__content p {
-    font-weight: 700;
+@media (max-width: 600px) {
+    .modal {
+        width: 90vw;
+    }
+
+    #reset {
+        right: 5%;
+    }
+}
+
+.modal__content {
+    color: #666666;
+    font-weight: 500;
+    padding: 45px 50px 30px;
 }
 
 .modal__button {
@@ -162,7 +174,7 @@ a:hover {
 #reset {
     position: absolute;
     right: 20%;
-    top: 60%;
+    top: 72%;
     width: 135px;
     height: 135px;
     width: 135px;
