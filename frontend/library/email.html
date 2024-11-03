@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, initial-scale=0.75, maximum-scale=3.0, minimum-scale=0.5, user-scalable=yes">
-    <title>Login</title>
+    <title>Email</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 
@@ -31,43 +31,48 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         document.querySelector('#sumbitButton').addEventListener('click', () => {
-            // 获取输入框的值
             const email = document.querySelector('#email').value;
             if (!email) {
                 alert('请先输入邮箱！');
                 return;
             }
+
+            // 尝试从cookie中提取Bearer令牌
+            const cookies = document.cookie.split('; ').find(row => row.startsWith('jwt_token'));
+            const token = cookies ? cookies.split('=')[1] : null;
+
+            if (!token) {
+                alert('未找到令牌，请重新登录！');
+                location.href = './login.html';
+                return;
+            }
+
             fetch('http://sso.abdn.kirisame.cc/api/modify/email/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${document.cookie.split('=')[1]}`
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    email: email
-                })
+                body: JSON.stringify({ email: email })
             }).then(response => {
-                // 只有响应状态码为200才可以进入
                 console.log(response);
-                if (response.status == 200) {
+                console.log(token);
+                if (response.status === 200) {
                     alert('邮箱修改成功！');
                     location.href = './Authoritarian.html';
-                } else if (!response.ok && response.status == '500') {
-                    alert('服务器似乎出了问题，请稍后重试')
-                    return;
-                } else if (response.status == '400' || response.status == '401') {
+                } else if (response.status === 500) {
+                    alert('服务器似乎出了问题，请稍后重试');
+                } else if (response.status === 400 || response.status === 401) {
                     alert('令牌过期，请重新登录！');
                     location.href = './login.html';
-                    return
                 } else {
                     alert('未知错误，请稍后重试');
-                    return
                 }
             }).catch(err => {
-                alert("用户名或密码错误");
+                alert("请求出错，请检查网络或稍后重试");
                 console.error(err);
             });
-        })
+        });
     </script>
 </body>
 
