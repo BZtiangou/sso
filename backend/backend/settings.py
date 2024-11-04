@@ -73,7 +73,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -214,15 +214,6 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
-        'default': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_LOG_DIR, "django.info.log"),
-            'maxBytes': 1024 * 1024 * 50,
-            'backupCount': 3,
-            'formatter': 'standard',
-            'encoding': 'utf-8',
-        },
         'error': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
@@ -244,7 +235,7 @@ LOGGING = {
     },
     'loggers': {
         '': {
-            'handlers': ['default', 'console', 'error'],
+            'handlers': ['console', 'error'],
             'level': 'DEBUG',
             'propagate': True,
         },

@@ -1,11 +1,11 @@
 from .models import CustomUser
-from .serializers import modifyPhoneSerializer,modifyEmailSerializer,modifyPasswordSerializer,UserLoginSerializer,UserSerializer,IsPasswordSerializer,ResetSerializer,modifyNameSerializer
-from .serializers import modifyGenderSerializer,userInfoSerializer,CheckPhoneSerializer,CustomTokenObtainPairSerializer,getAllUserInfoSerializer
+from .serializers import modifyPhoneSerializer, modifyEmailSerializer, modifyPasswordSerializer, UserLoginSerializer, UserSerializer, IsPasswordSerializer, ResetSerializer, modifyNameSerializer
+from .serializers import modifyGenderSerializer, userInfoSerializer, CheckPhoneSerializer, CustomTokenObtainPairSerializer, getAllUserInfoSerializer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from rest_framework.permissions import IsAdminUser 
+from rest_framework.permissions import IsAdminUser
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.permissions import IsAuthenticated
@@ -19,9 +19,9 @@ from datetime import timedelta
 from rest_framework_simplejwt.views import TokenObtainPairView
 from Crypto.Cipher import AES
 import base64
-import dotenv  
+import dotenv
 from drf_yasg import openapi
-import os 
+import os
 from math import ceil
 from pathlib import Path
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
@@ -30,24 +30,27 @@ from drf_yasg.utils import swagger_auto_schema
 # 加密
 BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv.load_dotenv(dotenv_path=BASE_DIR / ".env", verbose=True)
-key =  os.environ.get(
+key = os.environ.get(
     'PYOTP_SECRET_KEY',
     '8\xae\xdbp|h\x80\n\xfd\x9f\xa1\xfb\xf6W$\xd6'
 )
 
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+
 class askUserlengthApi(APIView):
     permission_classes = [IsAdminUser]  # 只允许管理员访问
+
     @swagger_auto_schema(
         operation_summary='获取用户总数对应的总页数',
         responses={
             200: openapi.Response('成功的响应', openapi.Schema(type=openapi.TYPE_OBJECT,
-                                                              properties={
-                                                                  'total_pages': openapi.Schema(type=openapi.TYPE_INTEGER)
-                                                              })
-                                )
+                                                          properties={
+                                                              'total_pages': openapi.Schema(type=openapi.TYPE_INTEGER)
+                                                          })
+                                  )
         }
     )
     def get(self, request):
@@ -57,39 +60,17 @@ class askUserlengthApi(APIView):
         total_pages = ceil(total_users / 500)
         return Response({'total_pages': total_pages})
 
-class getUserInfoApi(APIView):
-    # permission_classes = [IsAuthenticated]
-    permission_classes = []
-    # @otp_required  # 添加此装饰器以要求TOTP验证
-    def post(self, request):
-        serializer = userInfoSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        try:
-            user = get_user_model().objects.get(name=serializer.validated_data["name"])
-        except ObjectDoesNotExist:
-            return Response({"message": "User not registered"}, status=status.HTTP_400_BAD_REQUEST)
-        cipher = AES.new(eval(key), AES.MODE_ECB)
-        plaintext = b'6666666666666666'
-        enc = cipher.encrypt(plaintext)
-        # 将加密后的数据编码为base64
-        enc_base64 = base64.b64encode(enc).decode('utf-8')
-        # 解密
-        decipher = AES.new(eval(key), AES.MODE_ECB)
-        dec = decipher.decrypt(enc)
-        if enc_base64 == serializer.validated_data["otp"]:
-            return Response(user.username)
-        else:
-            return Response({"message": "OTP verification failed"}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
 class GetAllUserInfoApi(APIView):
     permission_classes = [IsAdminUser]  # 只允许管理员访问
+
     @swagger_auto_schema(
         operation_summary='获取所有用户信息',
         manual_parameters=[
             openapi.Parameter(
-                name='page', 
-                in_=openapi.IN_QUERY, 
-                description='页码参数，默认为1', 
+                name='page',
+                in_=openapi.IN_QUERY,
+                description='页码参数，默认为1',
                 type=openapi.TYPE_INTEGER
             )
         ],
@@ -104,10 +85,10 @@ class GetAllUserInfoApi(APIView):
         # 每页显示的用户数量
         per_page = 500
         # 获取所有用户
-        users = CustomUser.objects.all()  
+        users = CustomUser.objects.all()
         # 创建分页器
         paginator = Paginator(users, per_page)
-        
+
         try:
             # 获取指定页的用户列表
             users_page = paginator.page(page)
@@ -129,9 +110,11 @@ class GetAllUserInfoApi(APIView):
                 'role': user.role,
             }
             serialized_users.append(user_data)
-        
+
         return Response(serialized_users)
-#注册api
+# 注册api
+
+
 class UserRegisterApi(APIView):
     permission_classes = []  # 允许任何人注册
 
@@ -140,13 +123,13 @@ class UserRegisterApi(APIView):
         operation_description='提供用户信息进行注册',
         responses={
             201: openapi.Response('注册成功', openapi.Schema(type=openapi.TYPE_OBJECT,
-                                                           properties={
-                                                               'message': openapi.Schema(type=openapi.TYPE_STRING)
-                                                           })),
+                                                         properties={
+                                                             'message': openapi.Schema(type=openapi.TYPE_STRING)
+                                                         })),
             400: openapi.Response('注册失败', openapi.Schema(type=openapi.TYPE_OBJECT,
-                                                            properties={
-                                                                'errors': openapi.Schema(type=openapi.TYPE_OBJECT)
-                                                            }))
+                                                         properties={
+                                                             'errors': openapi.Schema(type=openapi.TYPE_OBJECT)
+                                                         }))
         },
         tags=['用户']
     )
@@ -158,9 +141,11 @@ class UserRegisterApi(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         # 存入cookie版本
-        
+
+
 class UserLoginApi(APIView):
     permission_classes = []
+
     @swagger_auto_schema(
         operation_summary='用户登录',
         operation_description='提供用户名和密码进行登录',
@@ -183,24 +168,25 @@ class UserLoginApi(APIView):
         serializer = UserLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            user = get_user_model().objects.get(username=serializer.validated_data["username"])
+            user = get_user_model().objects.get(
+                username=serializer.validated_data["username"])
         except ObjectDoesNotExist:
             return Response({"message": "User not registered"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if user.check_password(serializer.validated_data["password"]):
             refresh = RefreshToken.for_user(user)
-            
+
             # 使用自定义的TokenObtainPairSerializer生成token
             custom_token_serializer = CustomTokenObtainPairSerializer()
             token = custom_token_serializer.get_token(user)
             # 根据邮箱是否为空设置status的值
-            if not user.email :
+            if not user.email:
                 response = Response({
                     "username": user.username,
                     "refresh": str(refresh),
                     "access": str(token.access_token),
                     "expire": token.access_token.payload["exp"] - token.access_token.payload["iat"],
-                },status=520)
+                }, status=520)
 
                 # 设置访问令牌的Cookie
                 max_age = 60 * 60 * 24 * 1   # 设置Cookie有效期为1天
@@ -209,7 +195,7 @@ class UserLoginApi(APIView):
                     'jwt_token',  # Cookie的名称
                     str(token.access_token),  # Cookie的值，这里是访问令牌
                     max_age=max_age,  # Cookie的有效期
-                    httponly=False,  
+                    httponly=False,
                     domain='abdn.kirisame.cc',  # 设置cookie的域名
                     # domain='127.0.0.1',
                     # secure=True,  # 如果使用HTTPS，则设置为True
@@ -230,7 +216,7 @@ class UserLoginApi(APIView):
                     'jwt_token',  # Cookie的名称
                     str(token.access_token),  # Cookie的值，这里是访问令牌
                     max_age=max_age,  # Cookie的有效期
-                    httponly=False,  
+                    httponly=False,
                     domain='abdn.kirisame.cc',  # 设置cookie的域名
                     # domain='127.0.0.1',
                     # secure=True,  # 如果使用HTTPS，则设置为True
@@ -257,16 +243,17 @@ class checkphoneApi(APIView):
             return Response("手机号码不存在", status=status.HTTP_400_BAD_REQUEST)
 
 
-
 # 令牌发送api 通用api
 class Is_PasswordApi(APIView):
     permission_classes = []
+
     def post(self, request: Request) -> Response:
         serializer = IsPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         if get_user_model().objects.get(username=serializer.validated_data["username"]) == None:
-            return Response("用户不存在",status=status.HTTP_400_BAD_REQUEST)
-        user = get_user_model().objects.get(username=serializer.validated_data["username"])
+            return Response("用户不存在", status=status.HTTP_400_BAD_REQUEST)
+        user = get_user_model().objects.get(
+            username=serializer.validated_data["username"])
         if user.email == serializer.validated_data["email"]:
             token_value = get_random_string(length=6)
             user.token = token_value
@@ -282,12 +269,13 @@ class Is_PasswordApi(APIView):
                 "Token email has been sent to your reserved mailbox, please check!"
             })
         else:
-            return Response("The mailbox is incorrect or does not exist",status=status.HTTP_400_BAD_REQUEST)
+            return Response("The mailbox is incorrect or does not exist", status=status.HTTP_400_BAD_REQUEST)
 
 
 # 后续感觉需要添加验证码等防爆破
 class ResetPasswordApi(APIView):
     permission_classes = []
+
     def post(self, request: Request) -> Response:
         serializer = ResetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -295,7 +283,8 @@ class ResetPasswordApi(APIView):
         if get_user_model().objects.get(username=username):
             user = get_user_model().objects.get(username=username)
             if serializer.validated_data['token'] == user.token and user.token_expires and timezone.now() <= user.token_expires:
-                user = get_user_model().objects.get(username=serializer.validated_data['username'])
+                user = get_user_model().objects.get(
+                    username=serializer.validated_data['username'])
                 # 更新密码前，先使用 set_password 方法加密密码
                 user.set_password(serializer.validated_data['password'])
                 user.save()
@@ -306,8 +295,8 @@ class ResetPasswordApi(APIView):
                 return Response({
                     "令牌超时或错误"
                 })
-        else :
-            return Response({"The user name does not exist"},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"The user name does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
 # 普通修改密码
 class modifyPasswordApi(APIView):
@@ -316,11 +305,11 @@ class modifyPasswordApi(APIView):
     def post(self, request: Request) -> Response:
         serializer = modifyPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         # 获取用户
         username = request.user.username
         user = get_user_model().objects.get(username=username)
-        
+
         # 检查新密码长度
         new_password = serializer.validated_data['password']
         if len(new_password) < 6:
@@ -333,7 +322,7 @@ class modifyPasswordApi(APIView):
             user.set_password(new_password)
             user.save()
             return Response({"message": "Your password has been changed successfully. Please log in again."})
-        
+
         # 如果旧密码不匹配或用户不存在
         return Response({"error": "The old password is incorrect or the user does not exist."},
                         status=status.HTTP_400_BAD_REQUEST)
@@ -381,56 +370,62 @@ class modifyPasswordApi(APIView):
 #         else :
 #             return Response({"The user name does not exist"},status=status.HTTP_400_BAD_REQUEST)
 
-# 无安全验证版本
+# 简易版本
 class modifyEmailApi(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self,request:Request) -> Response:
+
+    def post(self, request: Request) -> Response:
         serializer = modifyEmailSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = request.user.username
         if get_user_model().objects.get(username=username):
             user = get_user_model().objects.get(username=username)
-            user.email= serializer.validated_data['email']
+            user.email = serializer.validated_data['email']
             user.save()
             return Response("email modification successful")
-        return Response({"The user name does not exist"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({"The user name does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class modifyPhoneApi(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self,request:Request) -> Response:
+
+    def post(self, request: Request) -> Response:
         serializer = modifyPhoneSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = request.user.username
         if get_user_model().objects.get(username=username):
             user = get_user_model().objects.get(username=username)
-            user.phone_number= serializer.validated_data['phone_number']
+            user.phone_number = serializer.validated_data['phone_number']
             user.save()
             return Response("phone modification successful")
-        return Response({"The user name does not exist"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({"The user name does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
-        
+
 class modifyGenderApi(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self,request:Request) -> Response:
+
+    def post(self, request: Request) -> Response:
         serializer = modifyGenderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = request.user.username
         if get_user_model().objects.get(username=username):
             user = get_user_model().objects.get(username=username)
-            user.gender= serializer.validated_data['gender']
+            user.gender = serializer.validated_data['gender']
             user.save()
             return Response("Gender modification successful")
-        return Response({"The user name does not exist"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({"The user name does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class modifyNameApi(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self,request:Request) -> Response:
+
+    def post(self, request: Request) -> Response:
         serializer = modifyNameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = request.user.username
         if get_user_model().objects.get(username=username):
             user = get_user_model().objects.get(username=username)
-            user.name= serializer.validated_data['name']
+            user.name = serializer.validated_data['name']
             user.save()
             return Response("Name changed successfully")
-        return Response({"The user name does not exist"},status=status.HTTP_400_BAD_REQUEST)
+        return Response({"The user name does not exist"}, status=status.HTTP_400_BAD_REQUEST)
