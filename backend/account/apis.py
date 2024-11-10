@@ -112,7 +112,11 @@ class GetAllUserInfoApi(APIView):
             serialized_users.append(user_data)
 
         return Response(serialized_users)
-# 注册api
+    
+class HeartBeatApi(APIView):
+    permission_classes = []
+    def get(self, request):
+        return Response({'status': 'success'}, status=status.HTTP_200_OK)
 
 
 class UserRegisterApi(APIView):
@@ -312,8 +316,8 @@ class modifyPasswordApi(APIView):
 
         # 检查新密码长度
         new_password = serializer.validated_data['password']
-        if len(new_password) < 6:
-            return Response({"error": "The new password must be longer than 6 characters."},
+        if len(new_password) < 8:
+            return Response({"error": "The new password must be longer than 8 characters."},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # 验证旧密码
@@ -326,6 +330,8 @@ class modifyPasswordApi(APIView):
         # 如果旧密码不匹配或用户不存在
         return Response({"error": "The old password is incorrect or the user does not exist."},
                         status=status.HTTP_400_BAD_REQUEST)
+    
+# 以旧换新版本修改
 # class modifyPhoneApi(APIView):
 #     permission_classes = []
 #     def post(self, request: Request) -> Response:
