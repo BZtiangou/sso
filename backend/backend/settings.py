@@ -31,6 +31,9 @@ DEBUG = os.environ.get("DEBUG", True)
 ALLOWED_HOSTS = [
     "sso.abdn.kirisame.cc",
     "127.0.0.1",
+    "localhost",
+    "10.191.31.150",
+    "abdnims.scnu.edu.cn",
 ]
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 20MB
