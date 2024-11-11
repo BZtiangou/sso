@@ -22,6 +22,7 @@ import base64
 import dotenv
 from drf_yasg import openapi
 import os
+from datetime import datetime
 from math import ceil
 from pathlib import Path
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
@@ -115,8 +116,15 @@ class GetAllUserInfoApi(APIView):
     
 class HeartBeatApi(APIView):
     permission_classes = []
+
     def get(self, request):
-        return Response({'status': 'success'}, status=status.HTTP_200_OK)
+        current_time = datetime.now()  # 获取当前时间
+        timestamp = current_time.timestamp()  # 将当前时间转换为时间戳
+        timestamp=current_time
+        return Response({
+            'status': 'success',
+            'timestamp': timestamp  # 添加时间戳到响应中
+        }, status=status.HTTP_200_OK)
 
 
 class UserRegisterApi(APIView):
