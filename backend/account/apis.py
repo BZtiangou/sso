@@ -19,6 +19,7 @@ from datetime import timedelta
 from rest_framework_simplejwt.views import TokenObtainPairView
 from Crypto.Cipher import AES
 import base64
+from django.contrib.auth.hashers import make_password
 import dotenv
 from drf_yasg import openapi
 import os
@@ -338,7 +339,20 @@ class modifyPasswordApi(APIView):
         # 如果旧密码不匹配或用户不存在
         return Response({"error": "The old password is incorrect or the user does not exist."},
                         status=status.HTTP_400_BAD_REQUEST)
-    
+
+   # 可删 
+class ModifyPasswordApi(APIView):
+    permission_classes = []
+    def get(self, request, *args, **kwargs):
+        # 遍历CustomUser模型中的所有记录
+        users = CustomUser.objects.all()
+        for user in users:
+            # 哈希手机号并更新password字段
+            if user.phone_number:
+                hashed_password = make_password(user.phone_number)
+                user.set_password(hashed_password)
+                user.save()
+        return Response({"message": "Passwords have been updated."}, status=status.HTTP_200_OK)
 # 以旧换新版本修改
 # class modifyPhoneApi(APIView):
 #     permission_classes = []
