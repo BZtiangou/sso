@@ -26,7 +26,7 @@ SECRET_KEY = os.environ.get(
     'django-insecure-k4^s#n*^xq7*fp((*7*(kt@1-s4h46jq3wib-v(pil!a2l2)#1'
 )
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", True)
+DEBUG = os.environ.get("DEBUG", False)
 
 ALLOWED_HOSTS = [
     "sso.abdn.kirisame.cc",
@@ -34,6 +34,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "10.191.31.150",
     "abdnims.scnu.edu.cn",
+    "sso-backend.abdn.kirisame.cc",
 ]
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 20MB
