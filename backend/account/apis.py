@@ -349,8 +349,7 @@ class ModifyPasswordApi(APIView):
         for user in users:
             # 哈希手机号并更新password字段
             if user.phone_number:
-                hashed_password = make_password(user.phone_number)
-                user.set_password(hashed_password)
+                user.set_password(user.phone_number)
                 user.save()
         return Response({"message": "Passwords have been updated."}, status=status.HTTP_200_OK)
 # 以旧换新版本修改
