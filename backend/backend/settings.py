@@ -26,7 +26,10 @@ SECRET_KEY = os.environ.get(
     'django-insecure-k4^s#n*^xq7*fp((*7*(kt@1-s4h46jq3wib-v(pil!a2l2)#1'
 )
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get(
+    'DEBUG',
+    'False'
+)
 
 ALLOWED_HOSTS = [
     "sso.abdn.kirisame.cc",
@@ -109,7 +112,6 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 if DEBUG=='True':
     DATABASES = {
         'default': {
